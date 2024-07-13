@@ -3,27 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Typing Game</title>
-    <style>
-        body { font-family: Arial, sans-serif; }
-        #game { display: none; position: relative; width: 100%; height: 500px; border: 1px solid #000; overflow: hidden; margin-top: 10px; }
-        #misses, #wrong-keys { font-size: 20px; margin-top: 10px; }
-        .letter { position: absolute; font-size: 24px; }
-    </style>
+    <title>Typing Fall</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div>
-        <label for="symbols">Enter symbols to use:</label>
-        <textarea id="symbols" rows="4" cols="50">ABCDEFGHIJKLMNOPQRSTUVWXYZ</textarea>
-        <label for="creation-speed">Enter letter creation speed (ms):</label>
-        <input type="number" id="creation-speed" placeholder="1000" value="1000" min="100">
-        <label for="falling-speed">Enter letter falling speed (px/100ms):</label>
-        <input type="number" id="falling-speed" placeholder="1" value="1" min="1">
-        <button id="start-btn">Start Game</button>
+    <div class="container">
+        <h1>Typing Fall</h1>
+        <div class="settings">
+            <label for="symbols">Enter symbols to use:</label>
+            <textarea id="symbols" rows="4" cols="50">ABCDEFGHIJKLMNOPQRSTUVWXYZ</textarea>
+            <label for="creation-speed">Enter letter creation speed (ms):</label>
+            <input type="number" id="creation-speed" placeholder="1000" value="1000" min="100">
+            <label for="falling-speed">Enter letter falling speed (px/100ms):</label>
+            <input type="number" id="falling-speed" placeholder="1" value="1" min="1">
+            <button id="start-btn">Start Game</button>
+        </div>
+        <div id="game"></div>
+        <div id="misses">Misses: 0</div>
+        <div id="wrong-keys">Wrong Keys: 0</div>
     </div>
-    <div id="game"></div>
-    <div id="misses">Misses: 0</div>
-    <div id="wrong-keys">Wrong Keys: 0</div>
     <script>
         const game = document.getElementById('game');
         const missesDisplay = document.getElementById('misses');
@@ -62,7 +60,8 @@
                 return;
             }
 
-            // Reset game state
+            clearInterval(createLetterInterval);
+            clearInterval(moveLettersInterval);
             activeLetters = [];
             misses = 0;
             wrongKeys = 0;
@@ -72,7 +71,6 @@
             game.style.display = 'block';
             gameStarted = true;
 
-            // Start game intervals
             createLetterInterval = setInterval(createLetter, creationSpeed);
             moveLettersInterval = setInterval(moveLetters, 100); 
         }
