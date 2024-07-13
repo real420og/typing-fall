@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Typing Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        #game { display: none; position: relative; width: 100%; height: 500px; border: 1px solid #000; overflow: hidden; margin-top: 10px; }
+        #misses, #wrong-keys { font-size: 20px; margin-top: 10px; }
+        .letter { position: absolute; font-size: 24px; }
+    </style>
+</head>
+<body>
+    <div>
+        <label for="symbols">Enter symbols to use:</label>
+        <textarea id="symbols" rows="4" cols="50">ABCDEFGHIJKLMNOPQRSTUVWXYZ</textarea>
+        <label for="creation-speed">Enter letter creation speed (ms):</label>
+        <input type="number" id="creation-speed" placeholder="1000" value="1000" min="100">
+        <label for="falling-speed">Enter letter falling speed (px/100ms):</label>
+        <input type="number" id="falling-speed" placeholder="1" value="1" min="1">
+        <button id="start-btn">Start Game</button>
+    </div>
+    <div id="game"></div>
+    <div id="misses">Misses: 0</div>
+    <div id="wrong-keys">Wrong Keys: 0</div>
+    <script>
+        const game = document.getElementById('game');
+        const missesDisplay = document.getElementById('misses');
+        const wrongKeysDisplay = document.getElementById('wrong-keys');
+        const startBtn = document.getElementById('start-btn');
+        const symbolsInput = document.getElementById('symbols');
+        const creationSpeedInput = document.getElementById('creation-speed');
+        const fallingSpeedInput = document.getElementById('falling-speed');
+        
+        let letters = '';
+        let speed = 1;
+        let misses = 0;
+        let wrongKeys = 0;
+        let activeLetters = [];
+        let createLetterInterval;
+        let moveLettersInterval;
+        let gameStarted = false;
+
+        function startGame() {
+            letters = symbolsInput.value.toUpperCase().replace(/\s+/g, ''); 
+            const creationSpeed = parseInt(creationSpeedInput.value);
+            speed = parseFloat(fallingSpeedInput.value);
+
+            if (!letters) {
+                alert('Please enter some symbols to start the game.');
+                return;
+            }
+            
+            if (isNaN(creationSpeed) || creationSpeed < 100) {
+                alert('Please enter a valid creation speed (at least 100 ms).');
+                return;
+            }
+
+            if (isNaN(speed) || speed < 0.1) {
+                alert('Please enter a valid falling speed (at least 0.1 px/100ms).');
+                return;
+            }
+
+            // Reset game state
+            activeLetters = [];
+            misses = 0;
+            wrongKeys = 0;
+            missesDisplay.innerText = 'Misses: 0';
+            wrongKeysDisplay.innerText = 'Wrong Keys: 0';
+            game.innerHTML = '';
+            game.style.display = 'block';
+            gameStarted = true;
+
+            // Start game intervals
+            createLetterInterval = setInterval(createLetter, creationSpeed);
+            moveLettersInterval = setInterval(moveLetters, 100); 
+        }
+
+        function createLetter() {
+            if (activeLetters.length >= letters.length) return; 
+            
+            let letter;
+            do {
+                letter = letters[Math.floor(Math.random() * letters.length)];
+            } while (activeLetters.includes(letter));
+            
+            activeLetters.push(letter);
+
+            const letterDiv = document.createElement('div');
+            letterDiv.className = 'letter';
+            letterDiv.innerText = letter;
+            letterDiv.style.left = Math.random() * (game.offsetWidth - 20) + 'px';
+            letterDiv.style.top = '0px';
+            game.appendChild(letterDiv);
+        }
+
+        function moveLetters() {
+            const allLetters = document.querySelectorAll('.letter');
+            allLetters.forEach(letter => {
+                letter.style.top = parseFloat(letter.style.top) + speed + 'px';
+                if (parseFloat(letter.style.top) > game.offsetHeight) {
+                    game.removeChild(letter);
+                    activeLetters = activeLetters.filter(activeLetter => activeLetter !== letter.innerText);
+                    if (gameStarted) {
+                        misses++;
+                        missesDisplay.innerText = 'Misses: ' + misses;
+                    }
+                }
+            });
+        }
+
+        function checkKeyPress(event) {
+            if (!gameStarted) return;
+
+            const allLetters = document.querySelectorAll('.letter');
+            let keyFound = false;
+            allLetters.forEach(letter => {
+                if (letter.innerText === event.key.toUpperCase()) {
+                    game.removeChild(letter);
+                    activeLetters = activeLetters.filter(activeLetter => activeLetter !== letter.innerText);
+                    keyFound = true;
+                }
+            });
+            if (!keyFound) {
+                wrongKeys++;
+                wrongKeysDisplay.innerText = 'Wrong Keys: ' + wrongKeys;
+            }
+        }
+
+        startBtn.addEventListener('click', startGame);
+        window.addEventListener('keypress', checkKeyPress);
+    </script>
+</body>
+</html>
+
