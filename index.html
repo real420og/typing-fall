@@ -11,11 +11,11 @@
         <h1>Typing Fall</h1>
         <div class="settings">
             <label for="symbols">Enter symbols to use:</label>
-            <textarea id="symbols" rows="4" cols="50">ABCDEFGHIJKLMNOPQRSTUVWXYZ</textarea>
+            <textarea id="symbols" rows="4" cols="50">ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-+=_|\!@#$%"^&*():{}"</textarea>
             <label for="creation-speed">Enter letter creation speed (ms):</label>
             <input type="number" id="creation-speed" placeholder="1000" value="1000" min="100">
-            <label for="falling-speed">Enter letter falling speed (px/100ms):</label>
-            <input type="number" id="falling-speed" placeholder="1" value="1" min="1">
+            <label for="falling-speed">Enter letter falling speed (s):</label>
+            <input type="number" id="falling-speed" placeholder="5" value="5" min="1" step="0.1">
             <button id="start-btn">Start Game</button>
         </div>
         <div id="game"></div>
@@ -32,12 +32,11 @@
         const fallingSpeedInput = document.getElementById('falling-speed');
         
         let letters = '';
-        let speed = 1;
+        let speed = 5;
         let misses = 0;
         let wrongKeys = 0;
         let activeLetters = [];
         let createLetterInterval;
-        let moveLettersInterval;
         let gameStarted = false;
 
         function startGame() {
@@ -55,13 +54,12 @@
                 return;
             }
 
-            if (isNaN(speed) || speed < 0.1) {
-                alert('Please enter a valid falling speed (at least 0.1 px/100ms).');
+            if (isNaN(speed) || speed < 1) {
+                alert('Please enter a valid falling speed (at least 1 second).');
                 return;
             }
 
             clearInterval(createLetterInterval);
-            clearInterval(moveLettersInterval);
             activeLetters = [];
             misses = 0;
             wrongKeys = 0;
@@ -72,7 +70,6 @@
             gameStarted = true;
 
             createLetterInterval = setInterval(createLetter, creationSpeed);
-            moveLettersInterval = setInterval(moveLetters, 100); 
         }
 
         function createLetter() {
@@ -89,21 +86,15 @@
             letterDiv.className = 'letter';
             letterDiv.innerText = letter;
             letterDiv.style.left = Math.random() * (game.offsetWidth - 20) + 'px';
-            letterDiv.style.top = '0px';
+            letterDiv.style.animationDuration = `${speed}s`;
             game.appendChild(letterDiv);
-        }
 
-        function moveLetters() {
-            const allLetters = document.querySelectorAll('.letter');
-            allLetters.forEach(letter => {
-                letter.style.top = parseFloat(letter.style.top) + speed + 'px';
-                if (parseFloat(letter.style.top) > game.offsetHeight) {
-                    game.removeChild(letter);
-                    activeLetters = activeLetters.filter(activeLetter => activeLetter !== letter.innerText);
-                    if (gameStarted) {
-                        misses++;
-                        missesDisplay.innerText = 'Misses: ' + misses;
-                    }
+            letterDiv.addEventListener('animationend', () => {
+                game.removeChild(letterDiv);
+                activeLetters = activeLetters.filter(activeLetter => activeLetter !== letter);
+                if (gameStarted) {
+                    misses++;
+                    missesDisplay.innerText = 'Misses: ' + misses;
                 }
             });
         }

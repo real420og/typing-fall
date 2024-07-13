@@ -78,5 +78,15 @@ button:hover {
     position: absolute;
     font-size: 24px;
     color: #333;
+    top: 0;
+    animation-name: fall;
+    animation-timing-function: linear;
+    animation-fill-mode: forwards;
+}
+
+@keyframes fall {
+    to {
+        top: 100%;
+    }
 }
 
