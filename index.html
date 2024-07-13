@@ -21,11 +21,13 @@
         <div id="game"></div>
         <div id="misses">Misses: 0</div>
         <div id="wrong-keys">Wrong Keys: 0</div>
+        <div id="cpm">Average Speed: 0 CPM</div>
     </div>
     <script>
         const game = document.getElementById('game');
         const missesDisplay = document.getElementById('misses');
         const wrongKeysDisplay = document.getElementById('wrong-keys');
+        const cpmDisplay = document.getElementById('cpm');
         const startBtn = document.getElementById('start-btn');
         const symbolsInput = document.getElementById('symbols');
         const creationSpeedInput = document.getElementById('creation-speed');
@@ -35,6 +37,8 @@
         let speed = 5;
         let misses = 0;
         let wrongKeys = 0;
+        let correctKeys = 0;
+        let startTime;
         let activeLetters = [];
         let createLetterInterval;
         let gameStarted = false;
@@ -60,14 +64,24 @@
             }
 
             clearInterval(createLetterInterval);
+            activeLetters.forEach(letter => {
+                const letterDiv = document.querySelector(`.letter[data-letter="${letter}"]`);
+                if (letterDiv) {
+                    letterDiv.removeEventListener('animationend', handleAnimationEnd);
+                    game.removeChild(letterDiv);
+                }
+            });
             activeLetters = [];
             misses = 0;
             wrongKeys = 0;
+            correctKeys = 0;
             missesDisplay.innerText = 'Misses: 0';
             wrongKeysDisplay.innerText = 'Wrong Keys: 0';
+            cpmDisplay.innerText = 'Average Speed: 0 CPM';
             game.innerHTML = '';
             game.style.display = 'block';
             gameStarted = true;
+            startTime = new Date();
 
             createLetterInterval = setInterval(createLetter, creationSpeed);
         }
@@ -84,19 +98,24 @@
 
             const letterDiv = document.createElement('div');
             letterDiv.className = 'letter';
+            letterDiv.setAttribute('data-letter', letter);
             letterDiv.innerText = letter;
             letterDiv.style.left = Math.random() * (game.offsetWidth - 20) + 'px';
             letterDiv.style.animationDuration = `${speed}s`;
             game.appendChild(letterDiv);
 
-            letterDiv.addEventListener('animationend', () => {
-                game.removeChild(letterDiv);
-                activeLetters = activeLetters.filter(activeLetter => activeLetter !== letter);
-                if (gameStarted) {
-                    misses++;
-                    missesDisplay.innerText = 'Misses: ' + misses;
-                }
-            });
+            letterDiv.addEventListener('animationend', handleAnimationEnd);
+        }
+
+        function handleAnimationEnd(event) {
+            const letterDiv = event.target;
+            const letter = letterDiv.getAttribute('data-letter');
+            game.removeChild(letterDiv);
+            activeLetters = activeLetters.filter(activeLetter => activeLetter !== letter);
+            if (gameStarted) {
+                misses++;
+                missesDisplay.innerText = 'Misses: ' + misses;
+            }
         }
 
         function checkKeyPress(event) {
@@ -109,12 +128,21 @@
                     game.removeChild(letter);
                     activeLetters = activeLetters.filter(activeLetter => activeLetter !== letter.innerText);
                     keyFound = true;
+                    correctKeys++;
+                    updateCPM();
                 }
             });
             if (!keyFound) {
                 wrongKeys++;
                 wrongKeysDisplay.innerText = 'Wrong Keys: ' + wrongKeys;
             }
+        }
+
+        function updateCPM() {
+            const currentTime = new Date();
+            const timeElapsed = (currentTime - startTime) / 60000; 
+            const cpm = (correctKeys / timeElapsed).toFixed(2);
+            cpmDisplay.innerText = `Average Speed: ${cpm} CPM`;
         }
 
         startBtn.addEventListener('click', startGame);
