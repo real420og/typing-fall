@@ -11,7 +11,7 @@
         <h1>Typing Fall</h1>
         <div class="settings">
             <label for="symbols">Enter symbols to use:</label>
-            <textarea id="symbols" rows="4" cols="50">ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-+=_|\!@#$%"^&*():{}"</textarea>
+            <textarea id="symbols" rows="4" cols="50">ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890-+=_|\!@#$%"^&*():{} АБВГДЕЁЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ</textarea>
             <label for="creation-speed">Enter letter creation speed (ms):</label>
             <input type="number" id="creation-speed" placeholder="1000" value="1000" min="100">
             <label for="falling-speed">Enter letter falling speed (s):</label>
@@ -33,6 +33,7 @@
         const creationSpeedInput = document.getElementById('creation-speed');
         const fallingSpeedInput = document.getElementById('falling-speed');
         
+        let alphabet = {};
         let letters = '';
         let speed = 5;
         let misses = 0;
@@ -43,12 +44,25 @@
         let createLetterInterval;
         let gameStarted = false;
 
+        function buildAlphabet() {
+            alphabet = {};
+            const symbols = symbolsInput.value.split('').filter(symbol => symbol.trim() !== '');
+            symbols.forEach(symbol => {
+                if (/[А-Яа-яЁё]/.test(symbol)) {
+                    alphabet[symbol.toUpperCase()] = `${symbol}<sup>cyrillic</sup>`;
+                } else {
+                    alphabet[symbol.toUpperCase()] = symbol;
+                }
+            });
+        }
+
         function startGame() {
-            letters = symbolsInput.value.toUpperCase().replace(/\s+/g, ''); 
+            buildAlphabet();
+            letters = Object.keys(alphabet);
             const creationSpeed = parseInt(creationSpeedInput.value);
             speed = parseFloat(fallingSpeedInput.value);
 
-            if (!letters) {
+            if (!letters.length) {
                 alert('Please enter some symbols to start the game.');
                 return;
             }
@@ -99,7 +113,7 @@
             const letterDiv = document.createElement('div');
             letterDiv.className = 'letter';
             letterDiv.setAttribute('data-letter', letter);
-            letterDiv.innerText = letter;
+            letterDiv.innerHTML = alphabet[letter];
             letterDiv.style.left = Math.random() * (game.offsetWidth - 20) + 'px';
             letterDiv.style.animationDuration = `${speed}s`;
             game.appendChild(letterDiv);
@@ -121,12 +135,13 @@
         function checkKeyPress(event) {
             if (!gameStarted) return;
 
+            const keyPressed = event.key.toUpperCase();
             const allLetters = document.querySelectorAll('.letter');
             let keyFound = false;
-            allLetters.forEach(letter => {
-                if (letter.innerText === event.key.toUpperCase()) {
-                    game.removeChild(letter);
-                    activeLetters = activeLetters.filter(activeLetter => activeLetter !== letter.innerText);
+            allLetters.forEach(letterDiv => {
+                if (letterDiv.getAttribute('data-letter') === keyPressed) {
+                    game.removeChild(letterDiv);
+                    activeLetters = activeLetters.filter(activeLetter => activeLetter !== keyPressed);
                     keyFound = true;
                     correctKeys++;
                     updateCPM();
